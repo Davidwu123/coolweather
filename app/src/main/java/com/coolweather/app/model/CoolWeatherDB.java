@@ -40,7 +40,7 @@ public class CoolWeatherDB {
     //用同步方法实现操作数据库的实例，即同一时刻只能由一个线程对该方法进行操作，也就是只能实例化一次
     // 外部调用首先调用的是该方法，将context传进来，并执行构造函数
     public synchronized static CoolWeatherDB getInstance(Context context){
-        if(sCoolWeatherDB!=null){
+        if(sCoolWeatherDB==null){
             //若没有被实例化，则实例化
             sCoolWeatherDB =new CoolWeatherDB(context);
         }
@@ -124,7 +124,7 @@ public class CoolWeatherDB {
             valuesCounty.put("county_name", county.getCountyName());
             valuesCounty.put("county_code", county.getCountyCode());
             valuesCounty.put("city_id", county.getCityId());
-            mSQLiteDatabase.insert("City", null, valuesCounty);
+            mSQLiteDatabase.insert("County", null, valuesCounty);
         }
     }
 
