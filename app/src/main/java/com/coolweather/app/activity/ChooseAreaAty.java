@@ -1,7 +1,10 @@
 package com.coolweather.app.activity;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -42,11 +45,23 @@ public class ChooseAreaAty extends AppCompatActivity {
     private List<County> mCountyList;
     private HomeAdapter mHomeAdapter;
     private List<String> datalist=new ArrayList<String>();
+    //设置标志位查看是否从WeatherAty中跳转过来
+    private boolean isFromWeatherAty;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        isFromWeatherAty=getIntent().getBooleanExtra("from_weather_aty",false);
         setContentView(R.layout.activity_choose_area_aty);
-
+        //已经选择了城市，且不是从WeatherAty跳转过来，才回直接跳转到WeatherAty
+        SharedPreferences preferences= PreferenceManager.
+                getDefaultSharedPreferences(this);
+        if(preferences.getBoolean("city_selected",false)&&!isFromWeatherAty){
+            Intent weatherIntent=new Intent(ChooseAreaAty.this,WeatherAty.class);
+            startActivity(weatherIntent);
+            finish();
+            return;
+        }
+        mCoolWeatherDB=CoolWeatherDB.getInstance(this);
         mRecyclerView= (RecyclerView) findViewById(R.id.review);
         mTextView= (TextView) findViewById(R.id.title_text);
         mHomeAdapter=new HomeAdapter(ChooseAreaAty.this,datalist);
@@ -65,10 +80,14 @@ public class ChooseAreaAty extends AppCompatActivity {
                     queryCities();
                 } else if (currentLevel == LEVEL_CITY) {
                     selectedCity = mCityList.get(position);
-
-
                     //查询该地级市的所有县
                     queryCounties();
+                }else if(currentLevel==LEVEL_COUNTY){
+                    String countyCode=mCountyList.get(position).getCountyCode();
+                    Intent intent=new Intent(ChooseAreaAty.this,WeatherAty.class);
+                    intent.putExtra("county_code",countyCode);
+                    startActivity(intent);
+                    finish();
                 }
             }
 
@@ -77,7 +96,6 @@ public class ChooseAreaAty extends AppCompatActivity {
 
             }
         });
-        mCoolWeatherDB=CoolWeatherDB.getInstance(this);
         //初始化时自动查询所有省级数据
         queryProvinces();
 
@@ -242,6 +260,11 @@ public class ChooseAreaAty extends AppCompatActivity {
         }else if(currentLevel==LEVEL_CITY){
             queryProvinces();
         }else {
+            //当在县界面中后退后，跳转到天气界面
+            /*if (isFromWeatherAty){
+                Intent intent=new Intent(ChooseAreaAty.this,WeatherAty.class);
+                startActivity(intent);
+            }*/
             finish();
         }
     }
