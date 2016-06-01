@@ -1,5 +1,11 @@
 package com.coolweather.app.util;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -42,6 +48,34 @@ public class HttpUtil {
                     if (connection!=null){
                         //断开连接
                         connection.disconnect();
+                    }
+                }
+            }
+        }).start();
+    }
+    public static void sendHttpClientRequest(final String address, final HttpCallbackListener listener){
+        //开启网络连接线程
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                HttpResponse httpResponse=null;
+                String response=null;
+                HttpGet httpGet=new HttpGet(address);
+                HttpClient httpClient=new DefaultHttpClient();
+                try {
+                    httpResponse=httpClient.execute(httpGet);
+                    if (httpResponse.getStatusLine().getStatusCode()==200){
+                        response= EntityUtils.toString(httpResponse.getEntity(),"utf-8");
+                       // LogUtil.d("ww",response);
+                    }
+                    if (listener != null) {
+                        //回调onFinish()方法
+                        listener.onFinish(response);
+                    }
+                } catch (Exception e) {
+                    if (listener != null) {
+                        //回调onError()方法
+                        listener.onError(e);
                     }
                 }
             }
